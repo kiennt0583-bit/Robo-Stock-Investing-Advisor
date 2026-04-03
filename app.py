@@ -31,9 +31,15 @@ def calc_max_drawdown(cumulative_returns):
     drawdown = (cumulative_returns / peak) - 1
     return drawdown.min()
 
-# --- GIAO DIỆN HEADER ---
+# # --- GIAO DIỆN HEADER ---
 st.title("🤖 MCNA Track 1: Robo-Advisor (AI Portfolio Manager)")
 st.caption("Được thiết kế và phát triển riêng cho hạng mục Data/Quant Analytics - MCNA")
+
+# Bổ sung bảng cảnh báo Disclaimer ngay từ đầu
+st.warning("""
+**⚠️ DISCLAIMER - LƯU Ý VỀ NGUỒN DỮ LIỆU:** Hệ thống đang kết nối Real-time với dữ liệu toàn cầu của Yahoo Finance để đảm bảo tính ổn định cao nhất. 
+Do đó, một số cổ phiếu vốn hóa siêu nhỏ (Penny), thanh khoản thấp hoặc thuộc sàn UPCoM có thể sẽ không có sẵn dữ liệu. Khuyến nghị quý vị trải nghiệm mô hình bằng các mã **Blue-chip hoặc Mid-cap** (VD: HPG, SSI, FPT, DGC, VND...) để thuật toán lượng tử phát huy tối đa sức mạnh.
+""")
 st.markdown("---")
 
 # --- TẠO TABS ĐIỀU HƯỚNG ---
