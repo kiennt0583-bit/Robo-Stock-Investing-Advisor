@@ -100,7 +100,7 @@ if analyze_btn and user_ticker:
                 - **Cân bằng ngành:** Danh mục kết hợp giữa Sản xuất, Công nghệ và Tài chính để tránh rủi ro tập trung ngành.
                 - **Hiệu quả dòng tiền:** Tỷ trọng được tính toán để bạn không cần 'đoán' thị trường mà vẫn tối ưu được lợi nhuận/rủi ro.
                 """)
-                st.info("🔗 **Đối chiếu thông tin ngoài:** [Xem tin tức các mã này trên CafeF](https://cafef.vn/tim-kiem/" + user_ticker + ".chn)")
+                st.info(f"🔗 **Đối chiếu thông tin ngoài:** [Xem tin tức & BCTC của {user_ticker} trên FireAnt](https://fireant.vn/dashboard/content/symbols/{user_ticker})")
 
             with col_corr:
                 st.markdown("### 🧬 Ma trận Tương quan (Lý do chọn mã)")
