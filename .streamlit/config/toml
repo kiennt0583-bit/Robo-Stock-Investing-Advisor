@@ -1,0 +1,15 @@
+[theme]
+# Màu chủ đạo cho nút bấm, thanh trượt (Màu xanh Teal hiện đại)
+primaryColor="#00FFAA"
+
+# Màu nền chính của trang Web (Màu đen sâu)
+backgroundColor="#0E1117"
+
+# Màu nền của Sidebar (Thanh bên trái - Màu xám đen)
+secondaryBackgroundColor="#1C2129"
+
+# Màu chữ chính (Trắng sáng)
+textColor="#FAFAFA"
+
+# Phông chữ (Sans serif cho thanh lịch)
+font="sans serif"
