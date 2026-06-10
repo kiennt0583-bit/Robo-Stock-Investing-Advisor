@@ -167,7 +167,7 @@ if analyze_btn and user_ticker:
 
         n_batches = -(-len(BASKET) // 5)
         est_seconds = n_batches * 15
-        st.write(f"📡 Đang tải dữ liệu {len(BASKET)+1} mã theo batch (ước ~{est_seconds}s để tránh rate limit)...")
+        st.write(f"📡 Đang tải dữ liệu {len(BASKET)+1} mã theo batch (ước tính ~{est_seconds}s để tránh rate limit)...")
 
         scan_list = tuple([user_ticker] + [t for t in BASKET if t != user_ticker])
         df_all, failed = fetch_data(scan_list)
