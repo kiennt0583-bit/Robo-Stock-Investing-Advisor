@@ -13,7 +13,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 warnings.filterwarnings('ignore')
 
-
 # --- 1. CẤU HÌNH & CSS ---
 st.set_page_config(page_title="Robo-Advisor Pro | MCNA", layout="wide", page_icon="📈")
 
@@ -44,14 +43,20 @@ def _fetch_one(args):
             close_candidates = [c for c in df.columns
                                 if c.lower() in ('close', 'closeprice', 'close_price', 'gia_dong_cua', 'c')]
             if not close_candidates:
-                # fallback: in ra để debug
-                print(f"[{ticker}] Columns available: {df.columns.tolist()}")
-                return ticker, None
-            close_col = close_candidates[0]
+                # Fallback: lấy cột numeric đầu tiên không phải ngày
+                num_cols = [c for c in df.columns
+                            if pd.api.types.is_numeric_dtype(df[c]) and c != date_col]
+                print(f"[{ticker}] No close col found. All columns: {df.columns.tolist()}")
+                if not num_cols:
+                    return ticker, None
+                close_col = num_cols[0]
+                print(f"[{ticker}] Using fallback column: '{close_col}'")
+            else:
+                close_col = close_candidates[0]
 
             # --- Tìm cột NGÀY ---
             date_candidates = [c for c in df.columns
-                            if c.lower() in ('time', 'date', 'trading_date', 'tradingdate',
+                               if c.lower() in ('time', 'date', 'trading_date', 'tradingdate',
                                                 'datetime', 't', 'index', 'ngay')]
             if not date_candidates:
                 print(f"[{ticker}] No date column found. Columns: {df.columns.tolist()}")
@@ -138,7 +143,7 @@ with st.sidebar:
                         ["Max Sharpe (Lợi nhuận/Rủi ro)", "Min Volatility (An toàn tối đa)"])
 
     use_top3 = st.toggle("🔝 Chỉ lấy Top 3 mã mạnh nhất", value=False,
-                        help="Sau khi tối ưu, AI sẽ lọc ra 3 mã tốt nhất và chia lại tỷ trọng để danh mục tập trung hơn.")
+                         help="Sau khi tối ưu, AI sẽ lọc ra 3 mã tốt nhất và chia lại tỷ trọng để danh mục tập trung hơn.")
 
     analyze_btn = st.button("🚀 Phân tích & Backtest", type="primary", use_container_width=True)
     st.divider()
@@ -160,26 +165,18 @@ if analyze_btn and user_ticker:
             st.error(f"❌ **'{user_ticker}'** không đúng định dạng mã chứng khoán VN (2–5 chữ cái, ví dụ: FPT, VCB, HPG).")
             st.stop()
 
-        # --- Validate mã tồn tại bằng cách fetch thử 30 ngày ---
-        st.write(f"🔎 Kiểm tra mã **{user_ticker}** trên sàn...")
-        _, test_series = _fetch_one((user_ticker,
-                                    (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d'),
-                                    datetime.today().strftime('%Y-%m-%d')))
-        if test_series is None:
-            status.update(label="Mã không hợp lệ!", state="error")
-            st.error(f"❌ Không tìm thấy dữ liệu cho mã **{user_ticker}**. "
-                    f"Vui lòng kiểm tra lại mã (ví dụ: FPT, VCB, HPG, VNM).")
-            st.stop()
-
         n_batches = -(-len(BASKET) // 5)
         est_seconds = n_batches * 15
         st.write(f"📡 Đang tải dữ liệu {len(BASKET)+1} mã theo batch (ước ~{est_seconds}s để tránh rate limit)...")
 
         scan_list = tuple([user_ticker] + [t for t in BASKET if t != user_ticker])
         df_all, failed = fetch_data(scan_list)
+
+        # Debug: hiển thị columns thực tế nếu có lỗi
         if failed:
-            st.warning(f"⚠️ Không tải được {len(failed)} mã: {', '.join(failed)}"
-                    " — có thể do rate limit hoặc mã không có trên VCI.")
+            with st.expander(f"⚠️ {len(failed)} mã không tải được — xem chi tiết"):
+                st.write("Các mã lỗi:", failed)
+                st.caption("Kiểm tra log terminal để xem tên cột thực tế từ vnstock.")
 
         if df_all.empty or user_ticker not in df_all.columns:
             status.update(label="Lỗi!", state="error")
@@ -215,9 +212,9 @@ if analyze_btn and user_ticker:
 
             constraints = {'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
             res = minimize(objective, num_assets * [1. / num_assets],
-                        method='SLSQP',
-                        bounds=tuple((0, 0.3) for _ in range(num_assets)),
-                        constraints=constraints)
+                           method='SLSQP',
+                           bounds=tuple((0, 0.3) for _ in range(num_assets)),
+                           constraints=constraints)
 
             st.markdown("### 🥧 Chiến lược giải ngân (Tỷ trọng % Vốn)")
             st.caption("💡 *Tỷ trọng được giới hạn tối đa 30%/mã để đảm bảo đa dạng hóa.*")
@@ -272,7 +269,7 @@ if analyze_btn and user_ticker:
                     st.markdown("#### Tỷ trọng giải ngân")
                     res_df = pd.DataFrame({'Mã': final_list, 'Tỷ trọng (%)': final_weights * 100}).sort_values('Tỷ trọng (%)', ascending=False)
                     st.dataframe(res_df[res_df['Tỷ trọng (%)'] > 0],
-                                column_config={"Tỷ trọng (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100)},
-                                hide_index=True, use_container_width=True)
+                                 column_config={"Tỷ trọng (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100)},
+                                 hide_index=True, use_container_width=True)
 
             st.chat_message("assistant").write(f"AI nhận định: Danh mục của bạn đã được tối ưu theo hướng {strategy}. Nhấn vào các mã để tra cứu thêm.")
